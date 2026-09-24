@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RiceGuard — Unified AI Pipeline</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0f1c;
+            --bg-secondary: #111827;
+            --bg-card: #1a2235;
+            --bg-card-hover: #1f2a40;
+            --accent-green: #10b981;
+            --accent-emerald: #34d399;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-cyan: #06b6d4;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #1e293b;
+            --glow-green: rgba(16, 185, 129, 0.15);
+            --glow-blue: rgba(59, 130, 246, 0.15);
+            --glow-purple: rgba(139, 92, 246, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background grid */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(ellipse 60% 40% at 50% 0%, rgba(16, 185, 129, 0.06), transparent),
+                radial-gradient(ellipse 40% 30% at 80% 80%, rgba(59, 130, 246, 0.04), transparent),
+                radial-gradient(ellipse 50% 50% at 20% 60%, rgba(139, 92, 246, 0.04), transparent);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 100px;
+            padding: 6px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-emerald);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .header-badge .dot {
+            width: 8px; height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #f1f5f9, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            font-size: 17px;
+            color: var(--text-secondary);
+            max-width: 650px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Pipeline Flow */
+        .pipeline {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+
+        /* Input Node */
+        .input-node {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-card-hover));
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px 40px;
+            text-align: center;
+            width: 100%;
+            max-width: 520px;
+            position: relative;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .input-node::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 17px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(59, 130, 246, 0.1));
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        .input-node .icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .input-node h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .input-node p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Connector Arrow */
+        .connector {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            height: 60px;
+        }
+
+        .connector .line {
+            width: 2px;
+            flex: 1;
+            background: linear-gradient(to bottom, var(--accent-green), var(--accent-blue));
+            position: relative;
+        }
+
+        .connector .line::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -3px;
+            width: 8px;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(16, 185, 129, 0.3), transparent);
+            filter: blur(4px);
+        }
+
+        .connector .arrow {
+            width: 0; height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 10px solid var(--accent-blue);
+        }
+
+        .connector .pulse-line {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 12px;
+            background: var(--accent-emerald);
+            border-radius: 2px;
+            animation: flow-down 2s infinite linear;
+            box-shadow: 0 0 8px var(--accent-emerald);
+        }
+
+        @keyframes flow-down {
+            0% { top: -4px; opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { top: calc(100% - 8px); opacity: 0; }
+        }
+
+        /* Step Card */
+        .step-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 32px;
+            width: 100%;
+            max-width: 700px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .step-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .step-card .step-glow {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .step-card.step-1 .step-glow { background: linear-gradient(90deg, var(--accent-green), var(--accent-emerald)); }
+        .step-card.step-2 .step-glow { background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); }
+        .step-card.step-3 .step-glow { background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue)); }
+
+        .step-card.step-1 { animation: fadeInDown 0.8s ease-out; }
+        .step-card.step-2 { animation: fadeInDown 1.0s ease-out; }
+        .step-card.step-3 { animation: fadeInDown 1.2s ease-out; }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .step-1 .step-number { background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); }
+        .step-2 .step-number { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+        .step-3 .step-number { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
+
+        .step-header-text h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .step-header-text p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .step-model-badge {
+            margin-left: auto;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-family: 'Courier New', monospace;
+        }
+
+        .step-body {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .step-body p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        .step-body p:last-child {
+            margin-bottom: 0;
+        }
+
+        .outputs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .output-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .output-item .icon {
+            font-size: 14px;
+        }
+
+        /* Shared badge */
+        .shared-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-amber);
+            margin-top: 14px;
+        }
+
+        /* Decision Branch */
+        .decision-branch {
+            display: flex;
+            align-items: flex-start;
+            gap: 40px;
+            width: 100%;
+            max-width: 700px;
+            margin-top: 10px;
+            animation: fadeInDown 0.9s ease-out;
+        }
+
+        .branch {
+            flex: 1;
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid;
+            transition: transform 0.3s ease;
+        }
+
+        .branch:hover {
+            transform: translateY(-2px);
+        }
+
+        .branch-reject {
+            background: rgba(239, 68, 68, 0.06);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .branch-accept {
+            background: rgba(16, 185, 129, 0.06);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .branch .icon { font-size: 28px; margin-bottom: 10px; }
+
+        .branch h4 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .branch-reject h4 { color: var(--accent-red); }
+        .branch-accept h4 { color: var(--accent-green); }
+
+        .branch p {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Models Grid */
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .model-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+
+        .model-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .model-item .model-name {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .model-item .model-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .model-item .model-file {
+            font-size: 10px;
+            font-family: 'Courier New', monospace;
+            color: var(--text-muted);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .model-item.keras .model-name { color: var(--accent-blue); }
+        .model-item.yolo .model-name { color: var(--accent-purple); }
+
+        .model-accuracy {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-emerald);
+            margin-top: 6px;
+        }
+
+        /* Result Node */
+        .result-node {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(59, 130, 246, 0.08));
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 16px;
+            padding: 28px 40px;
+            text-align: center;
+            width: 100%;
+            max-width: 520px;
+            animation: fadeInDown 1.4s ease-out;
+        }
+
+        .result-node .icon { font-size: 36px; margin-bottom: 12px; }
+        .result-node h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .result-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .result-tag {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .footer .version {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-top: 12px;
+        }
+
+        /* Connector variants */
+        .connector-branch {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 50px;
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .connector-branch::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px;
+            background: var(--accent-green);
+        }
+
+        .connector-branch::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: calc(25% + 20px);
+            right: calc(25% + 20px);
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-red), var(--accent-green));
+        }
+
+        .branch-left-line, .branch-right-line {
+            position: absolute;
+            top: 20px;
+            width: 2px;
+            height: 30px;
+        }
+
+        .branch-left-line {
+            left: calc(25% + 20px);
+            background: var(--accent-red);
+        }
+
+        .branch-right-line {
+            right: calc(25% + 20px);
+            background: var(--accent-green);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 24px 16px; }
+            .header h1 { font-size: 28px; }
+            .header p { font-size: 14px; }
+            .decision-branch { flex-direction: column; gap: 16px; }
+            .models-grid { grid-template-columns: 1fr; }
+            .step-header { flex-direction: column; text-align: center; }
+            .step-model-badge { margin-left: 0; }
+        }
+
+        /* Pipeline label */
+        .pipeline-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .pipeline-label .line {
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .pipeline-label span {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-badge">
+                <span class="dot"></span>
+                Unified Pipeline v3.0
+            </div>
+            <h1>🌾 RiceGuard AI Pipeline</h1>
+            <p>All models share a single YOLO-based gatekeeper for rice leaf detection. The image must pass through Step 1 before any disease classification begins.</p>
+        </div>
+
+        <!-- Pipeline Flow -->
+        <div class="pipeline">
+            <!-- INPUT -->
+            <div class="input-node">
+                <div class="icon">📸</div>
+                <h3>Image Upload</h3>
+                <p>User captures or uploads a photo of a rice leaf from the mobile app</p>
+            </div>
+
+            <!-- Connector -->
+            <div class="connector">
+                <div class="line"></div>
+                <div class="pulse-line"></div>
+                <div class="arrow"></div>
+            </div>
+
+            <!-- STEP 1 -->
+            <div class="step-card step-1">
+                <div class="step-glow"></div>
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div class="step-header-text">
+                        <h3>Rice Leaf Detection</h3>
+                        <p>YOLO Gatekeeper — shared by ALL models</p>
+                    </div>
+                    <div class="step-model-badge">rice_leaf_detector.pt</div>
+                </div>
+                <div class="step-body">
+                    <p>The uploaded image is analyzed by the <strong>YOLOv8 rice leaf detector</strong> model to determine if it contains a rice leaf. This model was specifically trained to recognize rice leaves and reject non-leaf images (fingers, sky, random objects, etc.).</p>
+                    <p>If the model is a <strong>detection model</strong>, it also crops the leaf region from the image, giving the downstream classifiers a cleaner input for better accuracy.</p>
+                    <div class="outputs-grid">
+                        <div class="output-item"><span class="icon">✅</span> is_rice_leaf</div>
+                        <div class="output-item"><span class="icon">📊</span> confidence %</div>
+                        <div class="output-item"><span class="icon">✂️</span> cropped_leaf</div>
+                        <div class="output-item"><span class="icon">🔍</span> detection_method</div>
+                    </div>
+                    <div class="shared-badge">
+                        ⚡ Shared by: MobileNetV2 · DenseNet201 · EfficientNetV2S · YOLOv8
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decision Branch -->
+            <div class="connector-branch">
+                <div class="branch-left-line"></div>
+                <div class="branch-right-line"></div>
+            </div>
+
+            <div class="decision-branch">
+                <div class="branch branch-reject">
+                    <div class="icon">❌</div>
+                    <h4>Not a Rice Leaf</h4>
+                    <p>Image is rejected immediately. User is asked to upload a clear photo of a rice leaf. No classification runs.</p>
+                </div>
+                <div class="branch branch-accept">
+                    <div class="icon">✅</div>
+                    <h4>Rice Leaf Detected</h4>
+                    <p>Image passes to Step 2 & 3. The cropped leaf image is sent to the user's chosen disease classification model.</p>
+                </div>
+            </div>
+
+            <!-- Connector -->
+            <div class="connector">
+                <div class="line"></div>
+                <div class="pulse-line" style="animation-delay: 0.5s;"></div>
+                <div class="arrow"></div>
+            </div>
+
+            <!-- STEP 2 & 3 -->
+            <div class="step-card step-3">
+                <div class="step-glow"></div>
+                <div class="step-header">
+                    <div class="step-number">2&3</div>
+                    <div class="step-header-text">
+                        <h3>Disease Classification</h3>
+                        <p>Health assessment + disease identification</p>
+                    </div>
+                    <div class="step-model-badge">user's chosen model</div>
+                </div>
+                <div class="step-body">
+                    <p>The cropped leaf image from Step 1 is passed to the user's selected classification model. The model determines if the leaf is healthy or diseased, and identifies the specific disease.</p>
+
+                    <div class="pipeline-label">
+                        <div class="line"></div>
+                        <span>Available Classifiers</span>
+                        <div class="line"></div>
+                    </div>
+
+                    <div class="models-grid">
+                        <div class="model-item keras">
+                            <div class="model-name">MobileNetV2</div>
+                            <div class="model-desc">Fast and lightweight — ideal for mobile</div>
+                            <div class="model-file">MobileNetV2_rice_disease.keras</div>
+                            <div class="model-accuracy">Accuracy: 89.24%</div>
+                        </div>
+                        <div class="model-item keras">
+                            <div class="model-name">DenseNet201</div>
+                            <div class="model-desc">Deep and accurate — dense connections</div>
+                            <div class="model-file">DenseNet201_rice_disease.keras</div>
+                            <div class="model-accuracy">Accuracy: 91.60%</div>
+                        </div>
+                        <div class="model-item keras">
+                            <div class="model-name">EfficientNetV2S</div>
+                            <div class="model-desc">Best balance of speed and accuracy</div>
+                            <div class="model-file">EfficientNetV2S_rice_disease.keras</div>
+                            <div class="model-accuracy">Accuracy: 93.70%</div>
+                        </div>
+                        <div class="model-item yolo">
+                            <div class="model-name">YOLOv8 Classifier</div>
+                            <div class="model-desc">YOLO-based disease classifier</div>
+                            <div class="model-file">rice_disease_classifier.pt</div>
+                            <div class="model-accuracy">Accuracy: 95.10%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connector -->
+            <div class="connector">
+                <div class="line"></div>
+                <div class="pulse-line" style="animation-delay: 1s;"></div>
+                <div class="arrow"></div>
+            </div>
+
+            <!-- RESULT -->
+            <div class="result-node">
+                <div class="icon">📋</div>
+                <h3>Diagnosis Result</h3>
+                <div class="result-tags">
+                    <span class="result-tag">Disease Name</span>
+                    <span class="result-tag">Confidence %</span>
+                    <span class="result-tag">Disease ID</span>
+                    <span class="result-tag">Healthy / Diseased</span>
+                    <span class="result-tag">Top Predictions</span>
+                    <span class="result-tag">Inference Time (ms)</span>
+                    <span class="result-tag">Pipeline: unified</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diseases Detected -->
+        <div style="margin-top: 60px; max-width: 700px; margin-left: auto; margin-right: auto;">
+            <div class="pipeline-label" style="margin-bottom: 20px;">
+                <div class="line"></div>
+                <span>Detectable Diseases</span>
+                <div class="line"></div>
+            </div>
+            <div class="models-grid">
+                <div class="model-item">
+                    <div class="model-name" style="color: var(--accent-red);">Bacterial Leaf Blight</div>
+                    <div class="model-desc">Caused by <em>Xanthomonas oryzae</em></div>
+                    <div class="model-file">disease_id: 1</div>
+                </div>
+                <div class="model-item">
+                    <div class="model-name" style="color: var(--accent-amber);">Leaf Blast</div>
+                    <div class="model-desc">Caused by <em>Magnaporthe oryzae</em></div>
+                    <div class="model-file">disease_id: 2</div>
+                </div>
+                <div class="model-item">
+                    <div class="model-name" style="color: var(--accent-purple);">Sheath Blight</div>
+                    <div class="model-desc">Caused by <em>Rhizoctonia solani</em></div>
+                    <div class="model-file">disease_id: 4</div>
+                </div>
+                <div class="model-item">
+                    <div class="model-name" style="color: var(--accent-green);">Healthy Rice Leaf</div>
+                    <div class="model-desc">No disease detected</div>
+                    <div class="model-file">disease_id: 100</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>RiceGuard AI — Unified Pipeline Architecture</p>
+            <div class="version">🌾 v3.0.0 — All models share YOLO Step 1 gatekeeper</div>
+        </div>
+    </div>
+</body>
+</html>

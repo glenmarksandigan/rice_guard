@@ -1,0 +1,2 @@
+DenseNet201_rice_disease.keras filter=lfs diff=lfs merge=lfs -text
+EfficientNetV2S_rice_disease.keras filter=lfs diff=lfs merge=lfs -text
